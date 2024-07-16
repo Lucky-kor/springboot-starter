@@ -23,11 +23,11 @@ import java.util.List;
 @RestController
 //특정 url로 요청을 보내면 controller에서 어떠한 방식으로 처리할지 정의.
 //이때 들어온 요청을 특정 메서드와 매핑하기 위해 사용되는 어노테이션
-@RequestMapping("/v11/members")
+@RequestMapping("/v2/members")
 //유효성 검증 클래스에 붇임.. 메서드에는 @Valid
 @Validated
 public class MemberController {
-    private final static String MEMBER_DEFAULT_URL = "/v11/members";
+    private final static String MEMBER_DEFAULT_URL = "/v2/members";
 
     //의존성 주입.
     private final MemberService memberService;

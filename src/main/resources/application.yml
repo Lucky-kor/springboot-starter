@@ -15,8 +15,10 @@ logging:
       springframework:
         orm:
           jpa: DEBUG
-server:
-  ssl:
-    key-store: classpath:localhost.p12 # 인증서 경로 작성
-    key-store-type: PKCS12 # 인증서 형식 작성
-    key-store-password: changeit # 인증서 비밀번호를 작성 changeit은 설정하지 않았을 때의 기본값
+mail:
+  address:
+    admin: admin@gmail.com
+jwt:
+  key: ${JWT_SECRET_KEY}
+  access-token-expiration-minutes: 30
+  refresh-token-expiration-minutes: 420

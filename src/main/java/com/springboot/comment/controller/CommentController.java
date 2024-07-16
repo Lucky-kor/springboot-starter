@@ -24,10 +24,10 @@ import javax.validation.constraints.Positive;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/v11/comments")
+@RequestMapping("/v2/comments")
 @Validated
 public class CommentController {
-    private final static String COMMENT_DEFAULT_URL = "/v11/comments";
+    private final static String COMMENT_DEFAULT_URL = "/v2/comments";
 
     private final CommentService commentService;
     private final CommentMapper mapper;

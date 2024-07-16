@@ -13,6 +13,7 @@ import com.springboot.utils.UriCreator;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,10 +23,10 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/v11/boards")
+@RequestMapping("/v2/boards")
 @Validated
 public class BoardController {
-    private final static String BOARD_DEFAULT_URL = "/v11/boards";
+    private final static String BOARD_DEFAULT_URL = "/v2/boards";
 
     private final BoardService boardService;
     private final MemberService memberService;

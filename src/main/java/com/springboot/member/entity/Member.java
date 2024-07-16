@@ -29,7 +29,14 @@ public class Member extends Auditable {
     private String name;
 
     @Column(length = 100, nullable = false)
+    private String password;
+
+    @Column(length = 100, nullable = false)
     private String phone;
+
+    // 사용자 권한 등록 위한 테이블 사용.
+    @ElementCollection(fetch = FetchType.EAGER)
+    private List<String> roles = new ArrayList<>();
 
     @Enumerated(value = EnumType.STRING)
     @Column(nullable = false)
