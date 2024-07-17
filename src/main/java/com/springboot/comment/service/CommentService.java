@@ -37,7 +37,6 @@ public class CommentService {
             comment.setVisibilityStatus(Comment.VisibilityStatus.SECRET);
         }
 
-        //comment 를 저장해야 되는데????? 이렇게 하면 되나??????????
         return commentRepository.save(comment);
     }
 

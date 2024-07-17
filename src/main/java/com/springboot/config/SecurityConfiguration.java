@@ -3,14 +3,13 @@ package com.springboot.config;
 import com.springboot.auth.filter.JwtAuthenticationFilter;
 import com.springboot.auth.filter.JwtVerificationFilter;
 import com.springboot.auth.handler.MemberAuthenticationFailureHandler;
+import com.springboot.auth.handler.MemberAuthenticationSuccessHandler;
 import com.springboot.auth.jwt.JwtTokenizer;
 import com.springboot.auth.utils.JwtAuthorityUtils;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.AbstractConfiguredSecurityBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -39,7 +38,8 @@ public class SecurityConfiguration {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
                     // h2 웹 콘솔 화면 자체가 내부적으로 <frame> 을 사용하고 있음. 이를 정상적으로 수행하도록 함.
                     // 동일 출처로부터 들어오는 요청만 페이지 렌더링을 허용.
-        http.headers().frameOptions().sameOrigin()
+        http
+                .headers().frameOptions().sameOrigin()
                 .and()
                 .csrf().disable()
                 .cors(withDefaults())
@@ -87,8 +87,8 @@ public class SecurityConfiguration {
             AuthenticationManager authenticationManager =
                     builder.getSharedObject(AuthenticationManager.class);
             JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(authenticationManager, jwtTokenizer);
-            jwtAuthenticationFilter.setFilterProcessesUrl("v2/auth/login");
-            jwtAuthenticationFilter.setAuthenticationFailureHandler(new MemberAuthenticationFailureHandler());
+            jwtAuthenticationFilter.setFilterProcessesUrl("/v2/auth/login");
+            jwtAuthenticationFilter.setAuthenticationSuccessHandler(new MemberAuthenticationSuccessHandler());
             jwtAuthenticationFilter.setAuthenticationFailureHandler(new MemberAuthenticationFailureHandler());
             JwtVerificationFilter jwtVerificationFilter = new JwtVerificationFilter(jwtTokenizer, jwtAuthorityUtils);
 

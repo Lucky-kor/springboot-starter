@@ -117,11 +117,8 @@ public class BoardService {
         Member findMember = member.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
         Optional<View> view = viewRepository.findByMemberAndBoard(findMember, findBoard);
 
-
-
         if(view.isPresent()) {
             view.orElseThrow(() -> new BusinessLogicException(ExceptionCode.VIEW_NOT_FOUND));
-            // delete 를 해라.
         } else {
             View addView = new View();
             addView.setBoard(findBoard);

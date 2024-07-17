@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.springboot.auth.dto.LoginDto;
 import com.springboot.auth.jwt.JwtTokenizer;
 import com.springboot.member.entity.Member;
+import lombok.SneakyThrows;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -28,11 +29,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         this.jwtTokenizer = jwtTokenizer;
     }
 
-    public Authentication atteptAuthentication (HttpServletRequest request, HttpServletResponse response) throws IOException {
+    @Override
+    @SneakyThrows
+    public Authentication attemptAuthentication (HttpServletRequest request, HttpServletResponse response) {
         ObjectMapper objectMapper = new ObjectMapper();
         LoginDto loginDto = objectMapper.readValue(request.getInputStream(), LoginDto.class);
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(loginDto.getUsername(), loginDto.getPassword());
+                new UsernamePasswordAuthenticationToken(loginDto.getUsername(),loginDto.getPassword());
         return authenticationManager.authenticate(authenticationToken);
     }
 
@@ -43,7 +46,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         String refreshToken = delegateRefreshToken(member);
         response.setHeader("Authorization", "Bearer " + accessToken);
         response.setHeader("Refresh", refreshToken);
-        this.getSuccessHandler().onAuthenticationSuccess(request, response, authResult);
+//        this.getSuccessHandler().onAuthenticationSuccess(request, response, authResult);
     }
 
     protected String delegateAccessToken (Member member) {
