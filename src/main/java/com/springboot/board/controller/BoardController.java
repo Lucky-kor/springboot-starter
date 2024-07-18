@@ -70,8 +70,9 @@ public class BoardController {
     }
 
     @GetMapping("/{board-id}")
-    public ResponseEntity patchBoard(@PathVariable("board-id") @Positive long boardId){
-        Board board = boardService.findBoard(boardId);
+    public ResponseEntity patchBoard(@PathVariable("board-id") @Positive long boardId,
+                                     Authentication authentication){
+        Board board = boardService.findBoard(boardId, authentication);
 
         return new ResponseEntity(new SingleResponseDto<>(mapper.boardToBoardResponseDto(board)), HttpStatus.OK);
     }

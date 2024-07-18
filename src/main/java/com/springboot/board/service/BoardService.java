@@ -10,6 +10,7 @@ import com.springboot.member.service.MemberService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,7 +70,19 @@ public class BoardService {
         return boardRepository.save(findBoard);
     }
 
-    public Board findBoard(long boardId){
+    public Board findBoard(long boardId,Authentication authentication){
+        Board findBoard = findVerifiedBoard(boardId);
+        if(findBoard.getBoardSecret().equals(Board.BoardSecret.SECRET_BOARD)){
+           boolean isAdmin = authentication.getAuthorities().stream()
+                   .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
+            if(isAdmin){
+               return findBoard;
+           }
+           else{
+               throw new BusinessLogicException(ExceptionCode.ONLY_ADMIN);
+           }
+        }
+
         return findVerifiedBoard(boardId);
     }
     public Page<Board> findBoards(int page, int size){
@@ -100,7 +113,10 @@ public class BoardService {
     }
 
     private void verifyBoard(Board board){
-        memberService.findVerifiedMember(board.getMember().getMemberId());
+        Member findMember = memberService.findVerifiedMember(board.getMember().getMemberId());
+        if(findMember.getMemberStatus().equals(Member.MemberStatus.MEMBER_QUIT)){
+            throw new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND);
+        }
     }
 
 

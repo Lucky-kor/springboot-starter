@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
+
 @Transactional
 @Service
 public class LikeService {
@@ -34,6 +35,19 @@ public class LikeService {
         like.setMember(findMember);
         like.setBoard(board);
 
+        Optional<Like> optionalLike = likeRepository.findByBoardAndMember(board,findMember);
+
+        Integer count = like.getBoard().getLikeCount();
+        if(optionalLike.isPresent()){
+            likeRepository.delete(optionalLike.get());
+            like.getBoard().setLikeCount(count -1);
+            return null;
+        }
+
+        like.getBoard().setLikeCount(count + 1
+        );
+
+
         return likeRepository.save(like);
     }
 
@@ -46,6 +60,8 @@ public class LikeService {
 
         likeRepository.delete(like);
     }
+
+
 
 
 }

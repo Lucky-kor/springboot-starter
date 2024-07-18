@@ -35,6 +35,10 @@ public class LikeController {
         String email = (String) authentication.getPrincipal();
         Like like = likeService.createLike(mapper.likePostDtoToLike(likePostDto),email);
 
+        if(like == null){
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+
         URI location = UriCreator.createUri(LIKES_DEFAULT_URL, like.getLikeId());
         return ResponseEntity.created(location).build();
     }

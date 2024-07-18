@@ -85,7 +85,7 @@ public class MemberService {
         findMember.setMemberStatus(Member.MemberStatus.MEMBER_QUIT);
         for(Board board : findMember.getBoards()){
             board.setBoardStatus(Board.BoardStatus.QUESTION_DEACTIVED);
-            board.setMember(null);
+
         }
 
         memberRepository.save(findMember);

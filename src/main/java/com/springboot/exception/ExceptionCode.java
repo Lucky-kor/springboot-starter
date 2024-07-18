@@ -11,7 +11,8 @@ public enum ExceptionCode {
     ANSWER_NOT_FOUND(404, "Answer not found"),
     NOT_YOUR_BOARD(409, "NOT_YOUR_BOARD"),
     NOT_YOUR_ANSWER(409, "NOT_YOUR_ANSWER"),
-    LIKE_NOT_FOUND(404,"LIKE_NOT_FOUND");
+    LIKE_NOT_FOUND(404,"LIKE_NOT_FOUND"),
+    ONLY_ADMIN(401, "ONLY_ADMIN");
 
     @Getter
     private int status;

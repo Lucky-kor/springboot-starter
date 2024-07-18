@@ -96,7 +96,7 @@ public class AnswerService {
         boardService.findVerifiedBoard(answer.getBoard().getBoardId());
     }
     private void updateBoard(Answer answer){
-        Board board = boardService.findBoard(answer.getBoard().getBoardId());
+        Board board = boardService.findVerifiedBoard(answer.getBoard().getBoardId());
 
         board.setAnswer(answer);
         boardService.updateBoard(board);

@@ -26,6 +26,7 @@ public interface BoardMapper {
 
         board.setTitle(boardPostDto.getTitle());
         board.setContent(boardPostDto.getContent());
+        board.setBoardSecret(boardPostDto.getBoardSecret());
 
         return board;
     }

@@ -38,6 +38,11 @@ public class Board {
     @Column(nullable = false, name = "LAST_MODIFIED_AT")
     private LocalDateTime modifiedAt = LocalDateTime.now();
 
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(length = 20, nullable = false)
+    private BoardSecret boardSecret = BoardSecret.PUBLIC_BOARD;
+
     @ManyToOne
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
@@ -48,6 +53,9 @@ public class Board {
 
     @OneToMany(mappedBy = "board", cascade = CascadeType.ALL)
     List<Like> likes = new ArrayList<>();
+
+    @Column
+    private Integer likeCount = 0;
 
     public void setMember(Member member) {
         this.member = member;
@@ -77,6 +85,22 @@ public class Board {
         private String stepDescription;
 
         BoardStatus(int stepNumber, String stepDescription) {
+            this.stepNumber = stepNumber;
+            this.stepDescription = stepDescription;
+        }
+    }
+
+    public enum BoardSecret{
+        SECRET_BOARD(1, "비밀 글"),
+        PUBLIC_BOARD(2, "공개 글");
+
+        @Getter
+        private int stepNumber;
+
+        @Getter
+        private String  stepDescription;
+
+        BoardSecret(int stepNumber, String stepDescription) {
             this.stepNumber = stepNumber;
             this.stepDescription = stepDescription;
         }
