@@ -51,6 +51,15 @@ public class Member extends Auditable {
         }
     }
 
+    @OneToMany (mappedBy = "member")
+    private List<Comment> comments = new ArrayList<>();
+    public void setComments (Comment comment) {
+        this.comments.add(comment);
+        if(comment.getMember() != this) {
+            comment.setMember(this);
+        }
+    }
+
     @OneToMany (mappedBy = "member", cascade = CascadeType.ALL)
     private List<Like> likes = new ArrayList<>();
     public void setLikes(Like like) {

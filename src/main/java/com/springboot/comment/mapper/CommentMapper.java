@@ -11,7 +11,6 @@ import org.mapstruct.Mapping;
 public interface CommentMapper {
 
     @Mapping(source = "boardId",target = "board.boardId")
-    @Mapping(source = "memberId", target = "member.memberId")
     Comment commentPostDtoToComment (CommentPostDto commentPostDto);
     Comment commentPatchDtoToComment (CommentPatchDto commentPatchDto);
 

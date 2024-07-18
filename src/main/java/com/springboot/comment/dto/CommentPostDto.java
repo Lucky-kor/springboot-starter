@@ -8,13 +8,12 @@ import javax.validation.constraints.Positive;
 
 @Getter
 public class CommentPostDto {
-    @Positive
     private long boardId;
-
-    @Positive
-    private long memberId;
 
     @NotBlank
     private String content;
 
+    public void setBoardId(long boardId) {
+        this.boardId = boardId;
+    }
 }

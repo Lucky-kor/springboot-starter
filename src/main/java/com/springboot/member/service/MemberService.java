@@ -92,11 +92,16 @@ public class MemberService {
         memberRepository.save(findMember);
     }
 
-    private void verifyExistsEmail (String email) {
+    public void verifyExistsEmail (String email) {
         Optional<Member> member = memberRepository.findByEmail(email);
         if (member.isPresent()) {
             throw new BusinessLogicException(ExceptionCode.MEMBER_EXISTS);
         }
+    }
+    public Member findVerifiedMember (String email) {
+        Optional<Member> member = memberRepository.findByEmail(email);
+        Member findMember = member.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+        return findMember;
     }
 
     public Member findVerifedMember (long memberId) {

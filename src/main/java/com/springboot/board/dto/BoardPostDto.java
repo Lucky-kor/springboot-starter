@@ -8,8 +8,8 @@ import javax.validation.constraints.Positive;
 
 @Getter
 public class BoardPostDto {
-    @Positive
-    private long memberId;
+//    @Positive
+//    private long memberId;
 
     @NotBlank
     private String title;

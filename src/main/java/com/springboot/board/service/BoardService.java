@@ -17,10 +17,16 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.springboot.board.entity.Board.QuestionStatus.*;
 import static com.springboot.page.SortType.*;
@@ -43,12 +49,16 @@ public class BoardService {
         this.viewRepository = viewRepository;
     }
 
-    public Board createBoard (Board board) {
-        // 회원인지 아닌지 등록함.
-        verifyBoardMember(board);
-        Board savedOrder = saveBoard(board);
-        // 등록시 등록 날짜 생성.
-        return savedOrder;
+    public Board createBoard (Board board, Authentication authentication) {
+        if (authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))){
+            throw new BusinessLogicException(ExceptionCode.NO_AUTHORITY);
+        } else {
+            String email = (String) authentication.getPrincipal();
+            Member member = memberService.findVerifiedMember(email);
+            board.setMember(member);
+
+            return boardRepository.save(board);
+        }
     }
     public void createLike (Like like) {
 
@@ -74,26 +84,32 @@ public class BoardService {
             Like addlike= new Like();
             addlike.setBoard(findBoard);
             addlike.setMember(findMember);
-            likeRepository.save(addlike);
             findBoard.setLikeCount(findBoard.getLikeCount() + 1);
-            boardRepository.save(findBoard);
+            likeRepository.save(addlike);
+
+//            boardRepository.save(findBoard);
         }
     }
 
-    public Board updateBoard (Board board) {
+    public Board updateBoard (Board board, Authentication authentication) {
         // 질문을 등록한 회원만 수정할 수 있음.
+        String email = (String) authentication.getPrincipal();
+        Member member = memberService.findVerifiedMember(email);
         Board findBoard = findVerifiedBoard(board.getBoardId());
-        // 질문 수정 시 수정 날짜 업데이트.
-        findBoard.setModifiedAt(LocalDateTime.now());
 
-        // 비밀글로 변경할 경우, 상태 변경 수정.
-        Optional.ofNullable(board.getVisibilityStatus())
-                .ifPresent(visibilityStatus -> findBoard.setVisibilityStatus(visibilityStatus));
-        Optional.ofNullable(board.getTitle())
-                .ifPresent(title -> findBoard.setTitle(title));
-        Optional.ofNullable(board.getContent())
-                .ifPresent(content -> findBoard.setContent(content));
-
+        if(findBoard.getMember() == member ) {
+            // 질문 수정 시 수정 날짜 업데이트.
+            findBoard.setModifiedAt(LocalDateTime.now());
+            // 비밀글로 변경할 경우, 상태 변경 수정.
+            Optional.ofNullable(board.getVisibilityStatus())
+                    .ifPresent(visibilityStatus -> findBoard.setVisibilityStatus(visibilityStatus));
+            Optional.ofNullable(board.getTitle())
+                    .ifPresent(title -> findBoard.setTitle(title));
+            Optional.ofNullable(board.getContent())
+                    .ifPresent(content -> findBoard.setContent(content));
+        } else {
+            new BusinessLogicException(ExceptionCode.DIFFERENT_USER);
+        }
         // 답변 완료된 질문은 수정할 수 없음.
         int questionNumber = findBoard.getQuestionStatus().getQuestionNumber();
         if (questionNumber == 2) {
@@ -101,38 +117,37 @@ public class BoardService {
         }
 
         return boardRepository.save(findBoard);
-        // 관리자일 경우 질문 상태 대답 변경.
+
     }
 
-    public Board findBoard (long boardId, long memberId) {
-        // 비밀글이면 질문을 등록한 회원과 관리자만 조회 가능
+    public Board findBoard (long boardId, Authentication authentication) {
+        // 비밀글이면 질문을 등록한 회원과 관리자만 조회 가능.
         // 답변이 존재하면 답변도 함께 조회해야 함.
         Board findBoard = findVerifiedBoard(boardId);
-        int questionNumber = findBoard.getQuestionStatus().getQuestionNumber();
-        // 이미 삭제 상태인 질문은 조회할 수 없다.
+        // 비밀글을 제외한 다른 글들은 회원과 관리자 모두가 봐야 함.
 
-        // view 를 하고 있는 member 를 데리고 와야 하는 것인데??????????
-        //
-        Optional<Member> member = memberRepository.findById(memberId);
-        Member findMember = member.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
-        Optional<View> view = viewRepository.findByMemberAndBoard(findMember, findBoard);
-
-        if(view.isPresent()) {
-            view.orElseThrow(() -> new BusinessLogicException(ExceptionCode.VIEW_NOT_FOUND));
+        // 비밀글이면
+        if(findBoard.getVisibilityStatus().equals(Board.VisibilityStatus.SECRET)) {
+            // 관리자와 질문을 등록한 회원은 볼 수 있음. 게시글의 작성자와 principal 이 같은지 확인.
+            if(isCheckBoardOwnerAndAdmin(authentication, findBoard.getMember())) {
+                createdView(authentication,findBoard);
+                return findBoard;
+            } else {
+                throw new BusinessLogicException(ExceptionCode.NO_AUTHORITY);
+            }
         } else {
-            View addView = new View();
-            addView.setBoard(findBoard);
-            addView.setMember(findMember);
-            viewRepository.save(addView);
-            findBoard.setViewCount(findBoard.getViewCount() + 1);
-            boardRepository.save(findBoard);
+            // 공개 일 때에는 다른 회원의 글도 볼 수 있어야 함.......
+            // 그냥 조회하면 되는 건가?
+            // 이거는 뷰에 대한 로직.
+            createdView (authentication, findBoard);
+            // 질문삭제, 비활성화 된 글은 보이도록 하지 않음.
+            // 이미 삭제 상태인 질문은 조회할 수 없다.
+            int questionNumber = findBoard.getQuestionStatus().getQuestionNumber();
+            if (questionNumber >= 3) {
+                throw new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND);
+            }
+            return findBoard;
         }
-
-        if (questionNumber >= 3) {
-            throw new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND);
-        }
-        return findBoard;
-
     }
 
     public Page<Board> findBoards (int page, int size, String sort) {
@@ -173,33 +188,36 @@ public class BoardService {
                 .findByQuestionStatusNotAndQuestionStatusNot(QUESTION_DELETED, QUESTION_DEACTIVED, pageable);
     }
 
-    public void deleteBoard (long boardId) {
+    public void deleteBoard (long boardId, Authentication authentication) {
         // 질문 등록한 회원만 가능.
-
-
         Board findBoard = findVerifiedBoard(boardId);
-        int questionNumber = findBoard.getQuestionStatus().getQuestionNumber();
-        if( questionNumber == 1) {
-            findBoard.setQuestionStatus(QUESTION_DELETED);
-            boardRepository.save(findBoard);
+        if(isCheckBoardOwner(authentication, findBoard.getMember())){
+            int questionNumber = findBoard.getQuestionStatus().getQuestionNumber();
+            if( questionNumber == 1) {
+                findBoard.setQuestionStatus(QUESTION_DELETED);
+                boardRepository.save(findBoard);
+            }
+            else if( questionNumber == 2) {
+                // 질문 삭제하면 질문 상태만 변경.
+                findBoard.setQuestionStatus(QUESTION_DELETED);
+                // comment 는 지워져야 함.
+                commentService.deleteComment(findBoard.getComment().getCommentId(), authentication);
+                boardRepository.save(findBoard);
+            }
+            // 이미 삭제상태인 질문은 삭제 불가.
+            else if (questionNumber == 3) {
+                throw new BusinessLogicException(ExceptionCode.CANNOT_DELETE_BOARD);
+            }
+        }else {
+            throw new BusinessLogicException(ExceptionCode.DIFFERENT_USER);
         }
-        else if( questionNumber == 2) {
-            // 질문 삭제하면 질문 상태만 변경.
-            findBoard.setQuestionStatus(QUESTION_DELETED);
-            // comment 는 지워져야 함.
-            commentService.deleteComment(findBoard.getComment().getCommentId());
-            boardRepository.save(findBoard);
-        }
-        // 이미 삭제상태인 질문은 삭제 불가.
-        else if (questionNumber == 3) {
-            throw new BusinessLogicException(ExceptionCode.CANNOT_CHANGE_BOARD);
-        }
+
     }
 
     // board 에 memberId 가 있으면, 수정, 조회, 삭제가 가능하도록 함.
     // 회원인지 아닌지를 조회를 하는 것.
     private void verifyBoardMember (Board board) {
-        //
+
         memberService.findVerifedMember(board.getMember().getMemberId());
     }
 
@@ -211,8 +229,35 @@ public class BoardService {
         return findBoard;
     }
 
-    private Board saveBoard (Board board) {
-        return boardRepository.save(board);
+    private boolean isCheckBoardOwnerAndAdmin(Authentication authentication, Member member) {
+        return member.getEmail().equals(authentication.getPrincipal())
+                || authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+    }
+
+    public boolean isCheckBoardOwner(Authentication authentication, Member member) {
+        return member.getEmail().equals(authentication.getPrincipal());
+    }
+
+
+
+    private void createdView (Authentication authentication, Board board) {
+        String email = (String) authentication.getPrincipal();
+        Optional<Member> optionalMember = memberRepository.findByEmail(email);
+        Member findMember = optionalMember.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+        Optional<View> view = viewRepository.findByMemberAndBoard(findMember, board);
+
+        if(view.isPresent()) {
+            view.orElseThrow(() -> new BusinessLogicException(ExceptionCode.VIEW_NOT_FOUND));
+        } else {
+            View addView = new View();
+            addView.setBoard(board);
+            addView.setMember(findMember);
+            board.setViewCount(board.getViewCount() + 1);
+            viewRepository.save(addView);
+
+//            boardRepository.save(board);
+        }
+
     }
 
 }

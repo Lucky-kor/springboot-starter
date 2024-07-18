@@ -51,16 +51,26 @@ public class SecurityConfiguration {
                 .and()
                 .authorizeHttpRequests(authorize -> authorize
                         // User 가 회원가입을 해서 로그인을 하면.
-
                         // boards post, patch, 한 건의 get, Delete
                         // Get 의 경우에 모든 글은 다른 회원도 볼 수 있음. 근데,
                         // 비밀글 상태인 질문은 질문을 등록한 회원(고객)과 관리자만 조회할 수 있다.
                         // 비밀글이면 로그인 한 상태에서 MemberId 가 같은지 다른지 조건을 달아주어야 하나.
-                        .antMatchers(HttpMethod.POST, "/*/boards").hasRole("USER")     // (1) 추가
-                                .antMatchers(HttpMethod.PATCH, "/*/boards/**").hasRole("USER")  // (2) 추가
-                                .antMatchers(HttpMethod.GET, "/*/boards").hasRole("ADMIN")     // (3) 추가
-                                .antMatchers(HttpMethod.GET, "/*/boards/**").hasAnyRole("USER", "ADMIN")  // (4) 추가
-                                .antMatchers(HttpMethod.DELETE, "/*/boards/**").hasRole("USER")  // (5) 추가
+                        // 회원으로 등록한 회원만 해당 게시판 기능 이용.
+                        .antMatchers(HttpMethod.POST, "/*/boards").hasRole("USER")
+                        // 질문을 등록한 회원만 수정.
+                        .antMatchers(HttpMethod.PATCH, "/*/boards/*").hasRole("USER")
+                        .antMatchers(HttpMethod.GET, "/*/boards").hasAnyRole("USER", "ADMIN")
+                        // 1건의 특정 질문은 질문을 등록한 회원과 관리지가 조회할 수 있음.
+                        .antMatchers(HttpMethod.GET, "/*/boards/*").hasAnyRole("USER", "ADMIN")
+                        // 회원만 삭제 가능. 질문을 등록한 회원만 삭제.
+                        .antMatchers(HttpMethod.DELETE, "/*/boards/*").hasRole("USER")
+                        // 답변 관리자만 등록 가능. 한 건만 등록 가능.
+                        .antMatchers(HttpMethod.POST, "/*/boards/*/comments").hasRole("ADMIN")
+                        // 답변을 등록한 관리자만 수정 가능.
+                        .antMatchers(HttpMethod.PATCH, "/*/boards/*/comments/*").hasRole("ADMIN")
+                        // 답변을 등록한 관리자만 삭제 가능.
+                        .antMatchers(HttpMethod.DELETE, "/*/boards/*/comments/*").hasRole("ADMIN")
+
                         .anyRequest().permitAll());
         return http.build();
     }

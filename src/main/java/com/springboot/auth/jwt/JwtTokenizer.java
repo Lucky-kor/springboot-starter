@@ -71,7 +71,9 @@ public class JwtTokenizer {
         Key key = getKeyFromBase64EncodeKey(baseEncodedSecretKey);
         Jws<Claims> claims = Jwts.parserBuilder()
                 .setSigningKey(key)
-                .build().parseClaimsJws(jws);
+                .build()
+                .parseClaimsJws(jws);
+
         return claims;
     }
 

@@ -8,7 +8,6 @@ import javax.validation.constraints.NotBlank;
 @Getter
 public class BoardPatchDto {
     private long boardId;
-    private long viewMemberId;
 
     private String title;
     private String content;

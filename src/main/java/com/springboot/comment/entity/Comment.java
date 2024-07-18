@@ -21,9 +21,15 @@ public class Comment extends Auditable {
     @Column(nullable = false)
     private String content;
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
+    public void setMember(Member member) {
+        this.member = member;
+        if (!member.getComments().contains(this)) {
+            member.setComments(this);
+        }
+    }
 
     @OneToOne(cascade = CascadeType.MERGE)
     //persist : 처음에 만들때 씀.

@@ -16,6 +16,7 @@ import com.springboot.member.service.MemberService;
 import com.springboot.utils.UriCreator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +25,11 @@ import javax.validation.constraints.Positive;
 import java.net.URI;
 
 @RestController
-@RequestMapping("/v2/comments")
+@RequestMapping("/v2/boards/{board-id}/comments")
+// v2/{board-id}/comments/1
 @Validated
 public class CommentController {
-    private final static String COMMENT_DEFAULT_URL = "/v2/comments";
+    private final static String COMMENT_DEFAULT_URL = "/v2/boards/{board-id}/comments";
 
     private final CommentService commentService;
     private final CommentMapper mapper;
@@ -38,30 +40,33 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity postComment (@Valid @RequestBody CommentPostDto commentPostDto) {
+    public ResponseEntity postComment (@PathVariable("board-id") @Positive long boardId,
+                                       @Valid @RequestBody CommentPostDto commentPostDto,
+                                       Authentication authentication) {
+        commentPostDto.setBoardId(boardId);
         Comment comment = mapper.commentPostDtoToComment(commentPostDto);
-        Board board = new Board();
-        board.setBoardId(commentPostDto.getBoardId());
-        comment.setBoard(board);
-
-        Comment createdComment = commentService.createComment(comment);
+        Comment createdComment = commentService.createComment(comment, authentication);
         URI location = UriCreator.createUri(COMMENT_DEFAULT_URL, createdComment.getCommentId());
         return ResponseEntity.created(location).build();
 
     }
 
-    @PatchMapping("{comment-id}")
-    public ResponseEntity patchComment (@PathVariable("comment-id") @Positive long commentId,
-                                        @Valid @RequestBody CommentPatchDto commentPatchDto) {
+    @PatchMapping("/{comment-id}")
+    public ResponseEntity patchComment (@PathVariable("board-id") @Positive long boardId,
+                                        @PathVariable("comment-id") @Positive long commentId,
+                                        @Valid @RequestBody CommentPatchDto commentPatchDto,
+                                        Authentication authentication) {
         commentPatchDto.setCommentId(commentId);
-        Comment comment = commentService.updateComment(mapper.commentPatchDtoToComment(commentPatchDto));
+        commentPatchDto.setBoardId(boardId);
+        Comment comment = commentService.updateComment(mapper.commentPatchDtoToComment(commentPatchDto), authentication);
         CommentResponseDto commentResponseDto = mapper.commentToCommentResponseDto(comment);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(commentResponseDto), HttpStatus.OK
         );
     }
     @GetMapping("{comment-id}")
-    public ResponseEntity getComment (@PathVariable("comment-id") @Positive long commentId) {
+    public ResponseEntity getComment (@PathVariable("board-id") @Positive long boardId,
+                                      @PathVariable("comment-id") @Positive long commentId) {
         Comment comment = commentService.findComment(commentId);
         CommentResponseDto commentResponseDto = mapper.commentToCommentResponseDto(comment);
 
@@ -71,11 +76,10 @@ public class CommentController {
     }
 
     @DeleteMapping("{comment-id}")
-    public ResponseEntity deleteComment (@PathVariable("comment-id") @Positive long commentId) {
-        commentService.deleteComment(commentId);
+    public ResponseEntity deleteComment (@PathVariable("board-id") @Positive long boardId, @PathVariable("comment-id") @Positive long commentId, Authentication authentication) {
+
+        commentService.deleteComment(commentId, authentication);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
     }
-
 }
-

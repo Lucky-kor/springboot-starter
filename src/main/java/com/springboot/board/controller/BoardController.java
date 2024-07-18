@@ -39,16 +39,16 @@ public class BoardController {
     }
 
     @PostMapping
-    public ResponseEntity postBoard (@Valid @RequestBody BoardPostDto boardPostDto) {
+    public ResponseEntity postBoard (@Valid @RequestBody BoardPostDto boardPostDto,
+                                     Authentication authentication) {
         // 메퍼로 먼저 감싼 다음에, 서비스에 적용.
-
         Board board = mapper.boardPostDtoToBoard(boardPostDto);
 
-        Member member = new Member();
-        member.setMemberId(boardPostDto.getMemberId());
-        board.setMember(member);
-
-        Board createdBoard = boardService.createBoard(board);
+        Board createdBoard = boardService.createBoard(board,authentication);
+//        Member member = new Member();
+//        member.setMemberId(board.getMember().getMemberId());
+//        Board createdBoard = boardService.createBoard(board, authentication);
+//        board.setMember(member);
 
         URI location = UriCreator.createUri(BOARD_DEFAULT_URL, createdBoard.getBoardId());
         return ResponseEntity.created(location).build();
@@ -67,9 +67,11 @@ public class BoardController {
 
     @PatchMapping("/{board-id}")
     public ResponseEntity patchBoard (@PathVariable("board-id") @Positive long boardId,
-                                      @Valid @RequestBody BoardPatchDto boardPatchDto) {
+                                      @Valid @RequestBody BoardPatchDto boardPatchDto,
+    Authentication authentication) {
         boardPatchDto.setBoardId(boardId);
-        Board board = boardService.updateBoard(mapper.boardPatchDtoTOBoard(boardPatchDto));
+        // 질문을 등록한 회원만 수정.
+        Board board = boardService.updateBoard(mapper.boardPatchDtoTOBoard(boardPatchDto), authentication);
         BoardResponseDto boardResponseDto = mapper.boardToBoardResponseDto(board);
 
         return new ResponseEntity<>(
@@ -78,9 +80,9 @@ public class BoardController {
 
     @GetMapping("/{board-id}")
     public ResponseEntity getBoard ( @PathVariable("board-id") @Positive long boardId,
-                                     @Valid @RequestBody BoardGetDto boardGetDto
-    ) {
-        Board board = boardService.findBoard(boardId, boardGetDto.getMemberId());
+                                     Authentication authentication) {
+        String email = (String) authentication.getPrincipal();
+        Board board = boardService.findBoard(boardId,authentication);
         BoardResponseDto boardResponseDto = mapper.boardToBoardResponseDto(board);
         return new ResponseEntity<>(
                 new SingleResponseDto<>(boardResponseDto), HttpStatus.OK);
@@ -103,8 +105,9 @@ public class BoardController {
     // 질문 삭제 상태.
     // 회원 탈퇴시 질문 비활성화. >> memberService
     @DeleteMapping("{member-id}")
-    public ResponseEntity deleteBoard ( @PathVariable("member-id") @Positive long boardId) {
-        boardService.deleteBoard(boardId);
+    public ResponseEntity deleteBoard ( @PathVariable("member-id") @Positive long boardId,
+                                        Authentication authentication) {
+        boardService.deleteBoard(boardId, authentication);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 
     }
