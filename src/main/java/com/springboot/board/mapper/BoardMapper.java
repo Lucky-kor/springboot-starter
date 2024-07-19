@@ -21,10 +21,6 @@ public interface BoardMapper {
     List<BoardResponseDto> boardsToBoardResponseDtos (List<Board> boards);
 
     @Mapping(source = "memberId", target = "member.memberId")
-    @Mapping(source = "boardId", target = "board.boardId")
-    Like likePostDtoToLike (LikePostDto likePostDto);
-
-    @Mapping(source = "memberId", target = "member.memberId")
     Board BoardGetDtoToBoard (BoardGetDto viewGetDto);
 
 }

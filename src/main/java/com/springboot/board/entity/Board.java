@@ -49,6 +49,12 @@ public class Board extends Auditable {
             comment.setBoard(this);
         }
     }
+    public void deleteComment (Comment comment) {
+        this.comment = null;
+        if (comment.getBoard() == this) {
+            comment.deleteBoard(this);
+        }
+    }
 
     @OneToOne(cascade = CascadeType.ALL)
     private Like like;
@@ -111,6 +117,14 @@ public class Board extends Auditable {
         VisibilityStatus(String visibilityStatus) {
             this.visibilityStatus = visibilityStatus;
         }
+    }
+
+    public void increasedCount(){
+        this.likeCount++;
+    }
+
+    public void decreaseCount(){
+        this.likeCount--;
     }
 
 }

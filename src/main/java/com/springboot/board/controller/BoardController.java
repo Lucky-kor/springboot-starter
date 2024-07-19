@@ -54,12 +54,11 @@ public class BoardController {
         return ResponseEntity.created(location).build();
     }
 
-    @PostMapping("/like/{board-id}")
+    @PostMapping("/{board-id}/like")
     public ResponseEntity postLike (@PathVariable("board-id") @Positive long boardId,
-                                    @Valid @RequestBody LikePostDto likePostDto) {
-        likePostDto.setBoardId(boardId);
-        Like like = mapper.likePostDtoToLike(likePostDto);
-        boardService.createLike(like);
+                                    Authentication authentication) {
+
+        boardService.createLike(boardId, authentication);
 
         return new ResponseEntity(HttpStatus.OK);
     }
@@ -68,7 +67,7 @@ public class BoardController {
     @PatchMapping("/{board-id}")
     public ResponseEntity patchBoard (@PathVariable("board-id") @Positive long boardId,
                                       @Valid @RequestBody BoardPatchDto boardPatchDto,
-    Authentication authentication) {
+                                      Authentication authentication) {
         boardPatchDto.setBoardId(boardId);
         // 질문을 등록한 회원만 수정.
         Board board = boardService.updateBoard(mapper.boardPatchDtoTOBoard(boardPatchDto), authentication);

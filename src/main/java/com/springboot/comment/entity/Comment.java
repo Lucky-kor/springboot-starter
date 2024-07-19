@@ -35,11 +35,16 @@ public class Comment extends Auditable {
     //persist : 처음에 만들때 씀.
     @JoinColumn(name = "BOARD_ID")
     private Board board;
-
     public void setBoard (Board board) {
         this.board = board;
         if(board.getComment() != this) {
             board.setComment(this);
+        }
+    }
+    public void deleteBoard(Board board) {
+        this.board = null;
+        if(board.getComment() == this) {
+            board.deleteComment(this);
         }
     }
 

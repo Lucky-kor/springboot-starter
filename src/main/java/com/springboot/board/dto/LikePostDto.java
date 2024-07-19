@@ -9,7 +9,4 @@ import javax.validation.constraints.NotBlank;
 @Setter
 public class LikePostDto {
 
-    private Long memberId;
-    private Long boardId;
-
 }

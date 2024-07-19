@@ -54,9 +54,10 @@ public class CommentService {
         //
         String email = (String) authentication.getPrincipal();
         Member member = memberService.findVerifiedMember(email);
+        comment.setMember(member);
         Comment findComment = findVerifiedComment(comment.getCommentId());
-        // admin 이고, comment 를 쓴 사람이면.
-        if( isCheckCommentOwner(authentication, member)) {
+        // comment 를 쓴 사람이면.
+        if( isCheckCommentOwner(authentication, findComment)) {
             // 있는 코멘트 데리고 옴.
 //            verifyComment(comment.getBoard().getBoardId());
             Optional.ofNullable(comment.getContent())
@@ -109,8 +110,8 @@ public class CommentService {
        return isAdmin;
     }
 
-    public boolean isCheckCommentOwner (Authentication authentication, Member member) {
-        return member.getEmail().equals(authentication.getPrincipal());
+    public boolean isCheckCommentOwner (Authentication authentication, Comment comment) {
+        return comment.getMember().getEmail().equals(authentication.getPrincipal());
     }
 
 }

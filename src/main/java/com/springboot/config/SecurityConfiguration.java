@@ -58,7 +58,7 @@ public class SecurityConfiguration {
                         // 회원으로 등록한 회원만 해당 게시판 기능 이용.
                         .antMatchers(HttpMethod.POST, "/*/boards").hasRole("USER")
                         // 질문을 등록한 회원만 수정.
-                        .antMatchers(HttpMethod.PATCH, "/*/boards/*").hasRole("USER")
+                        .antMatchers(HttpMethod.PATCH, "/*/boards/**").hasRole("USER")
                         .antMatchers(HttpMethod.GET, "/*/boards").hasAnyRole("USER", "ADMIN")
                         // 1건의 특정 질문은 질문을 등록한 회원과 관리지가 조회할 수 있음.
                         .antMatchers(HttpMethod.GET, "/*/boards/*").hasAnyRole("USER", "ADMIN")

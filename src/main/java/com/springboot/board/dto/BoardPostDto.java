@@ -17,6 +17,6 @@ public class BoardPostDto {
     @NotBlank
     private String content;
 
-    private Board.VisibilityStatus visibilityStatus;
+    private Board.VisibilityStatus visibilityStatus = Board.VisibilityStatus.PUBLIC;
 
 }

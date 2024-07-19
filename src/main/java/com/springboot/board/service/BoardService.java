@@ -60,16 +60,17 @@ public class BoardService {
             return boardRepository.save(board);
         }
     }
-    public void createLike (Like like) {
+    public void createLike (long boardId, Authentication authentication) {
 
         //  어떤 게 null 값이 나왔을 때 어떤 exception 코드를 전해야 하는가?
         // board 에 있는 like 를 확인해야 해서 그런가?
         // 받아온 like 에 board 를 가지고 옴.
         // jpa 가 무조건.
-        Optional<Board> board = boardRepository.findById(like.getBoard().getBoardId());
+        Optional<Board> board = boardRepository.findById(boardId);
         Board findBoard = board.orElseThrow(() -> new BusinessLogicException(ExceptionCode.BOARD_NOT_FOUND));
-        Optional<Member> member = memberRepository.findById(like.getMember().getMemberId());
+        Optional<Member> member = memberRepository.findByEmail((String) authentication.getPrincipal());
         Member findMember = member.orElseThrow(() -> new BusinessLogicException(ExceptionCode.MEMBER_NOT_FOUND));
+
         Optional<Like> findLike = likeRepository.findByMemberAndBoard(findMember, findBoard);
 
         if( findLike.isPresent()) {
@@ -77,17 +78,15 @@ public class BoardService {
             Like deleteLike = findLike.orElseThrow (() -> new BusinessLogicException(ExceptionCode.LIKE_EXISTS));
             findBoard.deleteLike(deleteLike);
             findMember.deleteLikes(deleteLike);
-            findBoard.setLikeCount(findBoard.getLikeCount()-1);
+            findBoard.decreaseCount();
             boardRepository.save(findBoard);
             likeRepository.delete(deleteLike);
         } else {
             Like addlike= new Like();
             addlike.setBoard(findBoard);
             addlike.setMember(findMember);
-            findBoard.setLikeCount(findBoard.getLikeCount() + 1);
+            findBoard.increasedCount();
             likeRepository.save(addlike);
-
-//            boardRepository.save(findBoard);
         }
     }
 
@@ -201,7 +200,7 @@ public class BoardService {
                 // 질문 삭제하면 질문 상태만 변경.
                 findBoard.setQuestionStatus(QUESTION_DELETED);
                 // comment 는 지워져야 함.
-                commentService.deleteComment(findBoard.getComment().getCommentId(), authentication);
+                findBoard.deleteComment(findBoard.getComment());
                 boardRepository.save(findBoard);
             }
             // 이미 삭제상태인 질문은 삭제 불가.
@@ -254,8 +253,6 @@ public class BoardService {
             addView.setMember(findMember);
             board.setViewCount(board.getViewCount() + 1);
             viewRepository.save(addView);
-
-//            boardRepository.save(board);
         }
 
     }

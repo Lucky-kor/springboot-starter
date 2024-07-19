@@ -27,8 +27,6 @@ public enum ExceptionCode {
 
     @Getter
     private String message;
-    // status 가 코드 임.
-    //
     ExceptionCode(int code, String message) {
         this.status = code;
         this.message = message;

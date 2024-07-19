@@ -35,6 +35,7 @@ public class Like {
             board.deleteLike(this);
         }
     }
+
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
@@ -44,6 +45,7 @@ public class Like {
             member.setLikes(this);
         }
     }
+
     public void deleteMember (Member member) {
         this.member = null;
         if(member.getLikes().contains(this)) {
