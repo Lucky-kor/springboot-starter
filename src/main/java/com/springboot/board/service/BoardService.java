@@ -2,7 +2,9 @@ package com.springboot.board.service;
 
 
 import com.springboot.board.entity.Board;
+import com.springboot.board.entity.View;
 import com.springboot.board.repository.BoardRepository;
+import com.springboot.board.repository.ViewRepository;
 import com.springboot.exception.BusinessLogicException;
 import com.springboot.exception.ExceptionCode;
 import com.springboot.member.entity.Member;
@@ -22,11 +24,15 @@ import java.util.Optional;
 public class BoardService {
     private final BoardRepository boardRepository;
     private final MemberService memberService;
+    private final ViewRepository viewRepository;
 
 
-    public BoardService(BoardRepository boardRepository, MemberService memberService) {
+
+    public BoardService(BoardRepository boardRepository, MemberService memberService, ViewRepository viewRepository) {
         this.boardRepository = boardRepository;
         this.memberService = memberService;
+
+        this.viewRepository = viewRepository;
     }
 
     public Board createBoard(Board board){
@@ -72,18 +78,36 @@ public class BoardService {
 
     public Board findBoard(long boardId,Authentication authentication){
         Board findBoard = findVerifiedBoard(boardId);
+        Member member = memberService.findVerifiedMember((String)authentication.getPrincipal());
+
+        Optional<View> optionalView = viewRepository.findByBoardAndMember(findBoard, member);
+        Integer count = findBoard.getViews().size();
         if(findBoard.getBoardSecret().equals(Board.BoardSecret.SECRET_BOARD)){
            boolean isAdmin = authentication.getAuthorities().stream()
                    .anyMatch(authority -> authority.getAuthority().equals("ROLE_ADMIN"));
-            if(isAdmin){
+            if(isAdmin || Objects.equals((String) authentication.getPrincipal(), findBoard.getMember().getEmail())){
+                if(optionalView.isEmpty()){
+                    View view = createView(boardId, authentication);
+                    findBoard.addView(view);
+                    findBoard.setViewCount(findBoard.getViews().size());
+                }else{
+                    findBoard.setViewCount(findBoard.getViews().size());
+                }
                return findBoard;
            }
            else{
                throw new BusinessLogicException(ExceptionCode.ONLY_ADMIN);
            }
+        } else{
+            if (optionalView.isEmpty()) {
+                View view = createView(boardId, authentication);
+                findBoard.addView(view);
+                findBoard.setViewCount(findBoard.getViews().size());
+            } else {
+                findBoard.setViewCount(findBoard.getViews().size());
+            }
         }
-
-        return findVerifiedBoard(boardId);
+        return findBoard;
     }
     public Page<Board> findBoards(int page, int size){
         return boardRepository.findAll(PageRequest.of(page,size, Sort.by("boardId").descending()));
@@ -119,7 +143,22 @@ public class BoardService {
         }
     }
 
+    private View createView(long boardId, Authentication authentication) {
+        Board board = findVerifiedBoard(boardId);
+        Member member = memberService.findVerifiedMember((String) authentication.getPrincipal());
 
+        View view = new View();
+        view.setMember(member);
+        view.setBoard(board);
+
+        if (viewRepository.findByBoardAndMember(board, member).isPresent()) {
+            return null;
+        } else {
+            return viewRepository.save(view);
+
+        }
+
+    }
 
 
 }

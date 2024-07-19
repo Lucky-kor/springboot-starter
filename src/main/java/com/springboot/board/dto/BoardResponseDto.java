@@ -23,6 +23,8 @@ public class BoardResponseDto {
     private String title;
     private String content;
     private LocalDateTime createdAt;
+    private Integer viewCount;
+    private Integer likeCount;
 
     private AnswerResponseDto answerResponseDto;
 

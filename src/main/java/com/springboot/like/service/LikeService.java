@@ -44,8 +44,7 @@ public class LikeService {
             return null;
         }
 
-        like.getBoard().setLikeCount(count + 1
-        );
+        like.getBoard().setLikeCount(count + 1);
 
 
         return likeRepository.save(like);

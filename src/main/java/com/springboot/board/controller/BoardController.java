@@ -72,6 +72,9 @@ public class BoardController {
     @GetMapping("/{board-id}")
     public ResponseEntity patchBoard(@PathVariable("board-id") @Positive long boardId,
                                      Authentication authentication){
+        if (authentication == null) {
+            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+        }
         Board board = boardService.findBoard(boardId, authentication);
 
         return new ResponseEntity(new SingleResponseDto<>(mapper.boardToBoardResponseDto(board)), HttpStatus.OK);

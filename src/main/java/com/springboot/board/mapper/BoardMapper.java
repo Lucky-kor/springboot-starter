@@ -39,6 +39,9 @@ public interface BoardMapper {
         boardResponseDto.setContent(board.getContent());
         boardResponseDto.setCreatedAt(board.getCreatedAt());
         boardResponseDto.setMember(board.getMember());
+        boardResponseDto.setViewCount(board.getViewCount());
+        boardResponseDto.setLikeCount(board.getLikeCount());
+
 
         AnswerResponseDto answerResponseDto = new AnswerResponseDto();
         if(board.getAnswer() == null){

@@ -47,6 +47,9 @@ public class Board {
     @JoinColumn(name = "MEMBER_ID")
     private Member member;
 
+    @OneToMany(mappedBy = "board")
+    List<View> views = new ArrayList<>();
+
     @OneToOne
     @JoinColumn(name = "ANSWER_ID")
     private Answer answer;
@@ -56,6 +59,9 @@ public class Board {
 
     @Column
     private Integer likeCount = 0;
+
+    @Column
+    private Integer viewCount = 0;
 
     public void setMember(Member member) {
         this.member = member;
@@ -71,6 +77,16 @@ public class Board {
             answer.setBoard(this);
         }
     }
+
+    public void addView(View view){
+        this.getViews().add(view);
+        if(view.getBoard() != this){
+            view.setBoard(this);
+        }
+    }
+
+
+
 
     public enum BoardStatus{
         QUESTION_REGISTERED(1, "질문 등록 상태"),
